@@ -5,9 +5,17 @@ from google import genai
 # ==========================================
 # 1. YOUR CREDENTIALS
 # ==========================================
-GEMINI_API_KEY = "AIzaSyAQsqI4Vd7lQYnY2UOg6KrKwq960SNFL-s"
-LINKEDIN_ACCESS_TOKEN = "AQUaOPEKXdqavEreGXkKQTbqIEZ9d-pKk03VGpNmQcPiTUwcoCSHO4v7Q8Z1AQHvjyRQHPiyGBFFKdvnWYldQM5a3-YfK_6KAnMbEy_2ZR-c5tYlQoerLGkpb3YBU5PtSl8bqRaVYoqN7XPE_KSmdIS7ARmFHh89pAiZDX1MERbwtEH-Tvk_OXpSg-_vdYt86tCyxGVFtbsXAMDbDc8c6S6jz_teXILlYMWUS5dUE792Gcfp7tFKFzeS2yH4KHnw9G3lEIfInGHUfS5whPl5a_VhYRXYzOQBbc0fZ3fsEMVaFTQj3HD90Hxl7GHc9M4C9EFSsRkr6Ajfgqalkw3pkg-Yn5kvUg"
-LINKEDIN_PERSON_URN = "urn:li:member:906275703" # e.g., urn:li:person:123456789
+import os
+import random
+import requests
+from google import genai
+
+# Pull credentials securely from GitHub Actions environment
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+LINKEDIN_ACCESS_TOKEN = os.environ["LINKEDIN_ACCESS_TOKEN"]
+LINKEDIN_PERSON_URN = os.environ["LINKEDIN_PERSON_URN"]
+
+# ... [The rest of the script stays exactly the same] ...
 
 # ==========================================
 # 2. DYNAMIC CONTENT ENGINE
