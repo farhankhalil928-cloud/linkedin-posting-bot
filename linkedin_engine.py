@@ -11,10 +11,10 @@ import requests
 from google import genai
 
 # Pull credentials securely from GitHub Actions environment
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-LINKEDIN_ACCESS_TOKEN = os.environ["LINKEDIN_ACCESS_TOKEN"]
-LINKEDIN_PERSON_URN = os.environ["LINKEDIN_PERSON_URN"]
-
+# Pull credentials securely and strip invisible characters
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "").strip()
+LINKEDIN_PERSON_URN = os.environ.get("LINKEDIN_PERSON_URN", "").strip()
 # ... [The rest of the script stays exactly the same] ...
 
 # ==========================================
