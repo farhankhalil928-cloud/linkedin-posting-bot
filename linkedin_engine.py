@@ -1,24 +1,18 @@
-import random
+import os
+import datetime
 import requests
 from google import genai
 
 # ==========================================
 # 1. YOUR CREDENTIALS
 # ==========================================
-import os
-import random
-import requests
-from google import genai
-
-# Pull credentials securely from GitHub Actions environment
 # Pull credentials securely and strip invisible characters
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "").strip()
 LINKEDIN_PERSON_URN = os.environ.get("LINKEDIN_PERSON_URN", "").strip()
-# ... [The rest of the script stays exactly the same] ...
 
 # ==========================================
-# 1. DETERMINISTIC CONTENT ENGINE
+# 2. DETERMINISTIC CONTENT ENGINE
 # ==========================================
 # Get the current day of the week (0 = Monday, 6 = Sunday)
 day_of_week = datetime.datetime.today().weekday()
@@ -59,9 +53,9 @@ engagement_format = engagement_formats[day_of_week]
 technical_focus = technical_focuses[day_of_year % len(technical_focuses)]
 
 # ==========================================
-# 2. THE HIGH-INTEGRITY AI PROMPT
+# 3. THE HIGH-INTEGRITY AI PROMPT
 # ==========================================
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", "").strip())
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 prompt = f"""
 You are an electrical engineer with 3 years of hands-on experience in the solar field, specializing in O&M, SCADA, and performance diagnostics. You are writing a post for your personal LinkedIn profile. 
@@ -92,9 +86,12 @@ Style Constraints:
 - LENGTH: Keep the entire post under 150 words.
 - HASHTAGS: Zero hashtags. 
 """
+
 print(f"Generating post about: {technical_focus}...")
+
+# Standardized the model name to gemini-2.5-flash for maximum stability
 response = client.models.generate_content(
-    model='gemini-3.1-flash-lite-preview',
+    model='gemini-2.5-flash',
     contents=prompt,
 )
 post_text = response.text
@@ -102,7 +99,7 @@ print(f"\n--- AI Generated Post ---\n{post_text}\n-------------------------\n")
 
 
 # ==========================================
-# 3. PUSH TO LINKEDIN API
+# 4. PUSH TO LINKEDIN API
 # ==========================================
 print("Pushing to LinkedIn...")
 url = "https://api.linkedin.com/v2/ugcPosts"
@@ -135,3 +132,4 @@ if api_response.status_code == 201:
     print("✅ Successfully posted to LinkedIn! Go check your profile.")
 else:
     print(f"❌ Failed to post. Status: {api_response.status_code}, Error: {api_response.text}")
+    
