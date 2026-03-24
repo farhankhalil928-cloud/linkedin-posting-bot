@@ -1,7 +1,10 @@
 name: LinkedIn Content Engine
 
 on:
-  workflow_dispatch: # This creates a manual "Run" button in GitHub
+  workflow_dispatch: # Keeps the manual "Run" button in GitHub
+  schedule:
+    # Runs at 16:00 UTC every day (which is exactly 9:00 PM UTC+5)
+    - cron: '0 16 * * *'
 
 jobs:
   post_to_linkedin:
@@ -24,3 +27,4 @@ jobs:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
         run: python linkedin_engine.py
+        
