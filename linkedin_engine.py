@@ -91,7 +91,7 @@ print(f"Generating post about: {technical_focus}...")
 
 # Standardized the model name to gemini-2.5-flash for maximum stability
 response = client.models.generate_content(
-    model='gemini-2.5-flash',
+    model='gemini-3.1-flash-lite-preview',
     contents=prompt,
 )
 post_text = response.text
