@@ -104,7 +104,7 @@ Style Constraints:
 - BANNED WORDS: "In today's fast-paced world," "Delve," "Navigating," "Crucial," "Landscape," "Transform," "Revolutionize," "Synergy," or any generic AI corporate fluff.
 - FORMATTING: Use generous whitespace to make it highly scannable on mobile, but group related thoughts logically instead of chopping every single sentence into a new line.
 - LENGTH: Keep the post around 150 to 250 words. Give yourself enough room to clearly explain the concept without rambling.
-- HASHTAGS: #SolarEnergy #PVOptimization #O&M #SolarEngineering #Renewables
+- HASHTAGS: #SolarEnergy #PVOptimization #OandM #SolarEngineering #Renewables
 """
 
 print(f"Generating post about: {technical_focus}...")
