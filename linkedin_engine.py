@@ -64,7 +64,27 @@ technical_focuses = [
     "Reactive power (VAR) dispatch limits cutting into real active power generation",
     "Combining historical satellite data with local software to eliminate sensor dependency",
     "Thermal cycling fatigue on MC4 connectors in high-heat environments",
-    "Software-based shadow modeling vs. actual near-field shading losses"
+    "Software-based shadow modeling vs. actual near-field shading losses",
+    "string current imbalance caused by aging MC4 connectors in high humidity regions",
+    "hidden inverter clipping during high irradiance events masked by SCADA averaging intervals",
+    "thermal runaway patterns in combiner box fuse holders under sustained high current",
+    "how incorrect DC cable sizing increases resistive losses in large solar arrays",
+    "tracker backtracking algorithm failures during diffuse irradiance conditions",
+    "how row-to-row shading causes early morning production anomalies",
+    "DC arc faults triggered by loose crimping in field-installed connectors",
+    "SCADA data granularity masking short-duration inverter trips",
+    "bifacial gain overestimation caused by inaccurate ground albedo assumptions",
+    "transformer tap misconfiguration causing systematic voltage mismatch in PV plants",
+    "inverter MPPT hunting behavior during rapidly changing cloud cover",
+    "grounding system corrosion leading to intermittent earth fault alarms",
+    "temperature sensor misplacement causing incorrect module thermal modeling",
+    "solar tracker stow angle errors during high wind protection events",
+    "mismatch losses caused by uneven module degradation across strings",
+    "plant performance ratio distortion due to incorrect plane-of-array irradiance measurement",
+    "unexpected clipping caused by incorrect DC/AC ratio assumptions in plant design",
+    "string combiner box overheating due to unbalanced current distribution",
+    "how soiling gradients across large arrays distort energy yield analysis",
+    "frequency response control signals forcing solar plants into partial curtailment"
 ]
 
 # Select today's strategy mathematically so they rotate smoothly
@@ -88,6 +108,7 @@ Today's Strategy:
 Generate 1 highly engaging, conversational, and insightful LinkedIn post based strictly on this strategy.
 
 Strict Constraints on Perspective & Authenticity (CRITICAL):
+- LANGUAGE: Write more like human and English writing skill should be medium.
 - NO FAKE EXPERIENCE: Frame case studies as industry observations, common field realities, or third-party data breakdowns (e.g., "A common failure mode in utility-scale sites is...", "We often see data showing..."). Do not claim you personally fixed a specific massive plant.
 - REALISM & CLARITY: Discuss real, scientifically accurate physics and metrics. Explain the "why" behind the problem so a new engineer can learn from it, but keep it grounded in reality.
 - IMPLICIT ENGAGEMENT: Structure the insight to leave a dangling technical question, a bold stance, or a slight "knowledge gap" that compels engineers to comment with their own experiences or corrections.
