@@ -14,7 +14,7 @@ LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "").strip()
 LINKEDIN_PERSON_URN = os.environ.get("LINKEDIN_PERSON_URN", "").strip()
 
 # GitHub Configuration for your secondary account
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()  
+GITHUB_TOKEN = os.environ.get("MAINGIT_TOKEN", "").strip()  
 GITHUB_OWNER = os.environ.get("GITHUB_OWNER", "farhankhalil217-ux").strip()
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "Solar-Metrix").strip()
 GITHUB_PATH = os.environ.get("GITHUB_PATH", "posts").strip()  
