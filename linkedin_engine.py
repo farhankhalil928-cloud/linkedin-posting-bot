@@ -1,5 +1,4 @@
 import os
-import random
 import requests
 import base64
 import time
@@ -15,18 +14,21 @@ LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "").strip()
 LINKEDIN_PERSON_URN = os.environ.get("LINKEDIN_PERSON_URN", "").strip()
 
 # GitHub Configuration for your secondary account
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()  # Required if repo is private
-GITHUB_OWNER = "your_other_github_username" 
-GITHUB_REPO = "your_article_repo_name"
-GITHUB_PATH = "articles"  # Leave empty "" if articles are in the root directory
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()  
+GITHUB_OWNER = os.environ.get("GITHUB_OWNER", "farhankhalil217-ux").strip()
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "Solar-Metrix").strip()
+GITHUB_PATH = os.environ.get("GITHUB_PATH", "posts").strip()  
+
+# State tracking file
+HISTORY_FILE = "history.txt"
 
 # ==========================================
-# 2. GITHUB REPOSITORY PARSER
+# 2. GITHUB REPOSITORY PARSER (STATEFUL)
 # ==========================================
-def fetch_daily_article_from_github(owner, repo, path, token=None):
+def fetch_unposted_article_from_github(owner, repo, path, token=None):
     """
-    Fetches the file list from a remote GitHub repository path,
-    picks a random markdown/text file, and returns its raw text content.
+    Fetches the file list, checks them against local history.txt, 
+    and returns the raw text and filename of the first unposted article.
     """
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}".strip("/")
     
@@ -50,10 +52,31 @@ def fetch_daily_article_from_github(owner, repo, path, token=None):
     
     if not valid_articles:
         raise FileNotFoundError(f"No valid .md or .txt files found in GitHub path: {path}")
+
+    # --- READ LOCAL HISTORY ---
+    posted_files = []
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            posted_files = [line.strip() for line in f.readlines()]
+            
+    # --- FILTER FOR UNPOSTED ARTICLES ---
+    # Sort them alphabetically first to ensure a predictable queue
+    valid_articles = sorted(valid_articles, key=lambda x: x["name"])
+    unposted_articles = [a for a in valid_articles if a["name"] not in posted_files]
     
-    selected_item = random.choice(valid_articles)
-    print(f"📖 Selected remote article: {selected_item['name']}")
+    if not unposted_articles:
+        print("🔄 All articles have been posted! Resetting history...")
+        unposted_articles = valid_articles
+        # Clear the history file to start over
+        open(HISTORY_FILE, "w").close()
+        
+    # Pick the first available unposted article
+    selected_item = unposted_articles[0]
+    filename = selected_item["name"]
     
+    print(f"📖 Selected unposted article: {filename}")
+    
+    # Fetch actual content
     file_response = requests.get(selected_item["url"], headers=headers)
     if file_response.status_code != 200:
         raise Exception(f"Failed to fetch file details. Status: {file_response.status_code}")
@@ -65,7 +88,7 @@ def fetch_daily_article_from_github(owner, repo, path, token=None):
     else:
         raw_content = requests.get(file_data["download_url"], headers=headers).text
         
-    return raw_content
+    return raw_content, filename
 
 # ==========================================
 # 3. TRANSLATION & ENGAGEMENT ENGINE
@@ -161,32 +184,36 @@ def publish_to_linkedin(post_text, access_token, person_urn):
     if api_response.status_code == 201:
         print("✅ Successfully posted to LinkedIn!")
     else:
-        print(f"❌ Failed to post. Status: {api_response.status_code}, Error: {api_response.text}")
-
+        raise Exception(f"❌ Failed to post. Status: {api_response.status_code}, Error: {api_response.text}")
 
 # ==========================================
 # 5. MAIN EXECUTION PIPELINE
 # ==========================================
 if __name__ == "__main__":
     try:
-        # Step 1: Pull raw markdown from your secondary GitHub repo
-        article_content = fetch_daily_article_from_github(
+        # Step 1: Pull the next unposted markdown file
+        article_content, article_filename = fetch_unposted_article_from_github(
             owner=GITHUB_OWNER,
             repo=GITHUB_REPO,
             path=GITHUB_PATH,
             token=GITHUB_TOKEN if GITHUB_TOKEN else None
         )
         
-        # Step 2: Use Gemini to translate it into a native LinkedIn post
+        # Step 2: Translate it into a native LinkedIn post
         linkedin_post_draft = generate_linkedin_post(article_content)
         print(f"\n--- AI Draft ---\n{linkedin_post_draft}\n----------------\n")
         
-        # Step 3: Publish to LinkedIn using your API credentials
+        # Step 3: Publish to LinkedIn 
         if LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN:
             publish_to_linkedin(linkedin_post_draft, LINKEDIN_ACCESS_TOKEN, LINKEDIN_PERSON_URN)
+            
+            # Step 4: ONLY save to history if the API push was successful
+            print(f"💾 Saving '{article_filename}' to {HISTORY_FILE}...")
+            with open(HISTORY_FILE, "a", encoding="utf-8") as f:
+                f.write(article_filename + "\n")
         else:
-            print("⚠️ LinkedIn credentials missing. Skipping API push.")
+            print("⚠️ LinkedIn credentials missing. Skipping API push and history save.")
             
     except Exception as e:
-        print(f"Pipeline failed: {e}")
+        print(f"\n🚨 Pipeline failed: {e}")
         exit(1)
