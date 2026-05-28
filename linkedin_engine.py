@@ -31,7 +31,10 @@ def fetch_unposted_article_from_github(owner, repo, path, token=None):
     and returns the raw text and filename of the first unposted article.
     """
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}".strip("/")
-    
+    # --- ADD THESE DEBUG LINES ---
+    print(f"🔍 DEBUG URL: {url}")
+    print(f"🔍 DEBUG TOKEN: {'Loaded successfully' if token else 'MISSING OR EMPTY'}")
+    # -----------------------------
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
