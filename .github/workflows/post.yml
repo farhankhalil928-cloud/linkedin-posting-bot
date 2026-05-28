@@ -23,8 +23,14 @@ jobs:
 
       - name: Run LinkedIn Engine
         env:
+          # Your Core API Secrets
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          
+          # Your Secondary GitHub Repo Variables
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: "TechGuru99"          # Replace with your secondary username
+          GITHUB_REPO: "solar-articles"       # Replace with your repo name
+          GITHUB_PATH: "published-posts"      # Replace with folder name, or leave as ""
         run: python linkedin_engine.py
-        
