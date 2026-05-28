@@ -1,177 +1,192 @@
 import os
-import time
 import random
-import datetime
 import requests
+import base64
+import time
 from google import genai
+from google.genai import types
 
 # ==========================================
-# 1. YOUR CREDENTIALS
+# 1. YOUR CREDENTIALS & CONFIG
 # ==========================================
+# API Keys and Tokens
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "").strip()
 LINKEDIN_PERSON_URN = os.environ.get("LINKEDIN_PERSON_URN", "").strip()
 
-# ==========================================
-# 2. DETERMINISTIC TOPIC ENGINE
-# ==========================================
-day_of_year = datetime.datetime.today().timetuple().tm_yday
-
-engagement_formats = [
-    "The Solar Diagnostic Puzzle (Present a realistic plant anomaly and let engineers deduce the cause)",
-    "The Data vs. Reality Breakdown (Contrast expected models vs actual physics)",
-    "The Engineering Unpopular Opinion (A bold but technically sound diagnostic stance)",
-    "The Root Cause Analysis (Third-party observation of a common industry failure mode)",
-    "The 'Hidden Cost' Expose (The financial impact of a technical measurement oversight)",
-    "The Hardware vs. Software Debate (Why physical sensors fail vs data models)",
-    "The 'Back to Basics' Mentor Post (Explaining a complex concept simply for junior engineers)"
-]
-
-technical_focuses = [
-    "SCADA communication failures and RS-485 daisy chain noise",
-    "PLC automation logic errors and tracker feedback loops",
-    "Historical weather data vs. local pyranometer calibration drift",
-    "Unexpected PR drops due to localized micro-climates",
-    "Inverter clipping masking true string-level underperformance",
-    "PID early warning signs vs generic SCADA alarms",
-    "The hidden O&M cost of weather station network downtime",
-    "Soiling loss estimations vs. actual module degradation",
-    "False inverter derating triggered by localized ground loops",
-    "Why standard PV yield models fail to predict high-wind cooling effects",
-    "Sensor calibration drift throwing off entire plant performance metrics",
-    "The gap between modeled baseline PR and actual commissioning PR",
-    "Drone thermography vs. string-level monitoring for bypassed diode failures",
-    "Network packet loss causing phantom inverter communication timeouts"
-]
-
-# Mathematically cycle through core strategies
-engagement_format = engagement_formats[day_of_year % len(engagement_formats)]
-technical_focus = technical_focuses[day_of_year % len(technical_focuses)]
-
+# GitHub Configuration for your secondary account
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()  # Required if repo is private
+GITHUB_OWNER = "your_other_github_username" 
+GITHUB_REPO = "your_article_repo_name"
+GITHUB_PATH = "articles"  # Leave empty "" if articles are in the root directory
 
 # ==========================================
-# 3. SOCIAL PSYCHOLOGY INJECTORS
+# 2. GITHUB REPOSITORY PARSER
 # ==========================================
-# Force the AI to start with a proven, curiosity-inducing structure
-hook_templates = [
-    "A solar plant can show perfect {metric} while secretly losing massive {hidden_metric}.",
-    "Most engineers blame {common_cause}. The real issue in the field is usually {hidden_cause}.",
-    "Here is a physical hardware problem your SCADA dashboard will almost never catch.",
-    "The plant looks healthy on the monitors. The string data says otherwise.",
-    "Stop trusting your local weather station when a site suddenly drops in PR."
-]
-
-# Rotate the CTA so LinkedIn's algorithm doesn't throttle repetitive external links
-cta_modes = [
-    "The Curiosity Gap: Hint that tracking historical weather data solves this, without explicitly linking.",
-    "The Technical Challenge: End with a statement that hardware-free PR tools (like Solar Metrix) catch these anomalies instantly.",
-    "The Mentor Sign-off: Mention that you build tools to bypass these specific hardware failures—link in your featured section."
-]
-
-# Mid-size hashtags that won't bury your post
-hashtag_pool = ["#SolarOandM", "#SolarDiagnostics", "#PVPerformance", "#SolarSCADA", "#UtilityScaleSolar", "#SolarEngineering"]
-
-selected_hook = random.choice(hook_templates)
-selected_cta = random.choice(cta_modes)
-selected_hashtags = " ".join(random.sample(hashtag_pool, 3))
-
-
-# ==========================================
-# 4. THE VIRAL AI PROMPT
-# ==========================================
-client = genai.Client(api_key=GEMINI_API_KEY)
-
-prompt = f"""
-You are an electrical engineer with 10 years of hands-on experience in the solar field, specializing in O&M, SCADA, and performance diagnostics. You are writing a highly engaging LinkedIn post.
-
-Your audience consists of highly technical peers (solar asset managers, SCADA technicians) AND junior engineers. 
-
-Today's Strategy:
-- Topic: {technical_focus}
-- Format: {engagement_format}
-- Required Hook Tone: Use a variation of this structure: "{selected_hook}"
-- CTA Style: {selected_cta}
-
-Generate 1 LinkedIn post based strictly on this strategy.
-
-Strict Constraints on Authenticity & Structure:
-1. THE PERSPECTIVE: Frame all case studies as industry observations or common field realities. Do not claim you personally fixed a massive plant yesterday.
-2. NO ASKING FOR COMMENTS: Never explicitly ask for comments (e.g., "What do you think?", "Share below"). Instead, leave a dangling technical thought or a bold stance that naturally compels engineers to debate it in the comments.
-3. DIAGNOSTIC PUZZLES: If the format is a "Diagnostic Puzzle," lay out the symptoms clearly using bullet points, and end the post by leaving the true root cause ambiguous for the audience to guess. 
-
-Formatting Rules (CRITICAL FOR LINKEDIN):
-- Maximum of 1 to 2 sentences per paragraph. Use heavy whitespace.
-- Use a short bulleted list (3-4 items) to describe the symptoms, scenario, or data points. 
-- Write in a punchy, conversational "broetry" rhythm. 
-- BANNED WORDS: "Delve," "Navigating," "Crucial," "Landscape," "Transform," "Revolutionize," "Synergy," or any generic AI fluff.
-
-Keep the post between 150 and 220 words. Do not include hashtags (they will be added later).
-"""
-
-print(f"Generating post about: {technical_focus}...")
-
-# ---------------------------------------------------------
-# AUTO-RETRY LOGIC FOR RESILIENCE
-# ---------------------------------------------------------
-max_retries = 3
-post_text = ""
-
-for attempt in range(max_retries):
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        # Append the dynamically selected hashtags to the bottom
-        post_text = f"{response.text.strip()}\n\n{selected_hashtags}"
-        
-        print(f"\n--- AI Generated Post ---\n{post_text}\n-------------------------\n")
-        break 
-        
-    except Exception as e:
-        error_msg = str(e)
-        if "503" in error_msg or "UNAVAILABLE" in error_msg or "429" in error_msg:
-            print(f"⚠️ Google Server Busy/Rate Limited (Attempt {attempt + 1}/{max_retries}).")
-            if attempt < max_retries - 1:
-                print("Waiting 60 seconds before retrying...")
-                time.sleep(60)
-            else:
-                print("❌ Max retries reached. Exiting.")
-                exit(1)
-        else:
-            raise e
-
-# ==========================================
-# 5. PUSH TO LINKEDIN API
-# ==========================================
-print("Pushing to LinkedIn...")
-url = "https://api.linkedin.com/v2/ugcPosts"
-
-headers = {
-    "Authorization": f"Bearer {LINKEDIN_ACCESS_TOKEN}",
-    "Content-Type": "application/json",
-    "X-Restli-Protocol-Version": "2.0.0"
-}
-
-payload = {
-    "author": LINKEDIN_PERSON_URN,
-    "lifecycleState": "PUBLISHED",
-    "specificContent": {
-        "com.linkedin.ugc.ShareContent": {
-            "shareCommentary": {
-                "text": post_text
-            },
-            "shareMediaCategory": "NONE"
-        }
-    },
-    "visibility": {
-        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" 
+def fetch_daily_article_from_github(owner, repo, path, token=None):
+    """
+    Fetches the file list from a remote GitHub repository path,
+    picks a random markdown/text file, and returns its raw text content.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}".strip("/")
+    
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
     }
-}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch repo contents. Status: {response.status_code}, Error: {response.text}")
+        
+    repo_items = response.json()
+    
+    valid_articles = [
+        item for item in repo_items 
+        if item["type"] == "file" and (item["name"].endswith(".md") or item["name"].endswith(".txt"))
+    ]
+    
+    if not valid_articles:
+        raise FileNotFoundError(f"No valid .md or .txt files found in GitHub path: {path}")
+    
+    selected_item = random.choice(valid_articles)
+    print(f"📖 Selected remote article: {selected_item['name']}")
+    
+    file_response = requests.get(selected_item["url"], headers=headers)
+    if file_response.status_code != 200:
+        raise Exception(f"Failed to fetch file details. Status: {file_response.status_code}")
+        
+    file_data = file_response.json()
+    
+    if file_data.get("encoding") == "base64":
+        raw_content = base64.b64decode(file_data["content"]).decode("utf-8")
+    else:
+        raw_content = requests.get(file_data["download_url"], headers=headers).text
+        
+    return raw_content
 
-api_response = requests.post(url, headers=headers, json=payload)
+# ==========================================
+# 3. TRANSLATION & ENGAGEMENT ENGINE
+# ==========================================
+def generate_linkedin_post(raw_article_content):
+    """
+    Translates raw engineering text into an engaging LinkedIn post using Gemini.
+    """
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    
+    system_instruction = """
+    You are a veteran solar engineer and master technical storyteller. Your job is to take complex, dense engineering data, field diagnostics, or solar modeling math, and translate it into a captivating LinkedIn post. 
+    Your goal is to make a junior engineer or asset manager understand the absolute weight of the problem without needing a PhD.
+    """
 
-if api_response.status_code == 201:
-    print("✅ Successfully posted to LinkedIn! Go check your profile.")
-else:
-    print(f"❌ Failed to post. Status: {api_response.status_code}, Error: {api_response.text}")
+    prompt = f"""
+    Take the core thesis of the following technical article and turn it into an engaging LinkedIn post.
+
+    Do NOT just summarize the text. Instead, extract the main technical tension (e.g., hardware failing, bad data, hidden financial losses) and tell it like an industry insight or a field realization.
+
+    Strict Constraints:
+    1. THE HOOK: Start with a punchy, counter-intuitive line. Disrupt their scrolling. (e.g., "The data says 99% uptime. The cash flow says otherwise.")
+    2. STYLE: Write in a punchy, conversational "broetry" style with heavy whitespace (1-2 sentences max per paragraph).
+    3. BULLETS: Present the core technical problem or symptoms in a short 3-item bulleted list.
+    4. THE SIGN-OFF: End with a lingering technical thought that forces engineers to think, without begging for comments. Do not include any URLs or call-to-actions in the text generation.
+    5. BANNED WORDS: "Delve," "Navigating," "Crucial," "Landscape," "Transform," "Revolutionize," "Synergy," "In conclusion."
+
+    Here is the raw article text:
+    ---
+    {raw_article_content}
+    ---
+    """
+
+    print("Translating high-tech article into engaging LinkedIn format...")
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.7 
+                )
+            )
+            return response.text.strip()
+        except Exception as e:
+            error_msg = str(e)
+            if "503" in error_msg or "UNAVAILABLE" in error_msg or "429" in error_msg:
+                print(f"⚠️ Google Server Busy/Rate Limited (Attempt {attempt + 1}/{max_retries}).")
+                if attempt < max_retries - 1:
+                    time.sleep(60)
+                else:
+                    raise Exception("❌ Max retries reached for Gemini API.")
+            else:
+                raise e
+
+# ==========================================
+# 4. LINKEDIN POST API PUBLISHER
+# ==========================================
+def publish_to_linkedin(post_text, access_token, person_urn):
+    """
+    Pushes the finalized post directly to the user's LinkedIn profile feed.
+    """
+    print("Publishing to LinkedIn API...")
+    url = "https://api.linkedin.com/v2/ugcPosts"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0"
+    }
+
+    payload = {
+        "author": person_urn,
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": {
+                "shareCommentary": {
+                    "text": post_text
+                },
+                "shareMediaCategory": "NONE"
+            }
+        },
+        "visibility": {
+            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" 
+        }
+    }
+
+    api_response = requests.post(url, headers=headers, json=payload)
+
+    if api_response.status_code == 201:
+        print("✅ Successfully posted to LinkedIn!")
+    else:
+        print(f"❌ Failed to post. Status: {api_response.status_code}, Error: {api_response.text}")
+
+
+# ==========================================
+# 5. MAIN EXECUTION PIPELINE
+# ==========================================
+if __name__ == "__main__":
+    try:
+        # Step 1: Pull raw markdown from your secondary GitHub repo
+        article_content = fetch_daily_article_from_github(
+            owner=GITHUB_OWNER,
+            repo=GITHUB_REPO,
+            path=GITHUB_PATH,
+            token=GITHUB_TOKEN if GITHUB_TOKEN else None
+        )
+        
+        # Step 2: Use Gemini to translate it into a native LinkedIn post
+        linkedin_post_draft = generate_linkedin_post(article_content)
+        print(f"\n--- AI Draft ---\n{linkedin_post_draft}\n----------------\n")
+        
+        # Step 3: Publish to LinkedIn using your API credentials
+        if LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN:
+            publish_to_linkedin(linkedin_post_draft, LINKEDIN_ACCESS_TOKEN, LINKEDIN_PERSON_URN)
+        else:
+            print("⚠️ LinkedIn credentials missing. Skipping API push.")
+            
+    except Exception as e:
+        print(f"Pipeline failed: {e}")
+        exit(1)
