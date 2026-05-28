@@ -30,7 +30,7 @@ jobs:
           
           # Your Secondary GitHub Repo Variables
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_OWNER: "TechGuru99"          # Replace with your secondary username
-          GITHUB_REPO: "solar-articles"       # Replace with your repo name
-          GITHUB_PATH: "published-posts"      # Replace with folder name, or leave as ""
+          GITHUB_OWNER: "farhankhalil217-ux"          # Replace with your secondary username
+          GITHUB_REPO: "Solar-Metrix"       # Replace with your repo name
+          GITHUB_PATH: "posts"      # Replace with folder name, or leave as ""
         run: python linkedin_engine.py
