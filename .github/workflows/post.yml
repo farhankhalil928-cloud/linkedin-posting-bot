@@ -1,10 +1,13 @@
 name: LinkedIn Content Engine
 
 on:
-  workflow_dispatch: # Keeps the manual "Run" button in GitHub
+  workflow_dispatch: 
   schedule:
-    # Runs at 16:00 UTC every day (which is exactly 9:00 PM UTC+5)
     - cron: '0 16 * * *'
+
+# Grant the action permission to commit files back to the repository
+permissions:
+  contents: write
 
 jobs:
   post_to_linkedin:
@@ -23,14 +26,21 @@ jobs:
 
       - name: Run LinkedIn Engine
         env:
-          # Your Core API Secrets
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
           
-          # Your Secondary GitHub Repo Variables
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_OWNER: "farhankhalil217-ux"          # Replace with your secondary username
-          GITHUB_REPO: "Solar-Metrix"       # Replace with your repo name
-          GITHUB_PATH: "posts"      # Replace with folder name, or leave as ""
+          GITHUB_TOKEN: ${{ secrets.MAINGIT_TOKEN }}
+          GITHUB_OWNER: "farhankhalil217-ux"          
+          GITHUB_REPO: "Solar-Metrix"       
+          GITHUB_PATH: "posts"      
         run: python linkedin_engine.py
+
+      # This new step commits the updated history.txt back to your repo
+      - name: Commit and Push History
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add history.txt
+          git commit -m "Update posted history" || echo "No changes to commit"
+          git push
